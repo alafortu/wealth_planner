@@ -32,6 +32,7 @@
             padding: 30px;
             margin: 20px 0;
             backdrop-filter: blur(10px);
+            position: relative; /* For absolute positioning of Share btn */
         }
         
         h1 {
@@ -40,6 +41,45 @@
             font-size: 2.2rem;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
+
+        /* Share Button */
+        .share-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .share-btn:hover { background: #4a90e2; border-color: #4a90e2; }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #4a90e2;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2000;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* Tabs */
         .tabs {
@@ -92,6 +132,7 @@
 
         @media (max-width: 700px) {
             .input-grid { grid-template-columns: 1fr; }
+            .share-btn { position: relative; top: 0; right: 0; margin-bottom: 15px; width: 100%; justify-content: center; }
         }
         
         .input-group {
@@ -139,6 +180,47 @@
             border-color: #4a90e2;
             background: rgba(255, 255, 255, 0.15);
         }
+
+        /* Toggle Switch for Volatility */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .toggle-label { margin: 0; font-weight: 600; color: #eee; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #4a90e2; }
+        input:checked + .slider:before { transform: translateX(24px); }
 
         /* Range Sliders */
         .range-slider {
@@ -313,6 +395,13 @@
     <div class="container">
         <h1>Wealth Planner</h1>
         
+        <button class="share-btn" onclick="copyShareLink()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
+            Share / Save
+        </button>
+
+        <div class="toast" id="toast">Configuration saved to Link!</div>
+
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('growth')">Growth Calculator</button>
             <button class="tab-btn" onclick="switchTab('goal')">Goal Planner</button>
@@ -414,19 +503,19 @@
             <div class="input-grid">
                 <div class="input-group">
                     <label>Target Amount ($)</label>
-                    <input type="number" id="target" value="1000000" step="10000">
+                    <input type="number" id="target" value="1000000" step="10000" oninput="saveState()">
                 </div>
                 <div class="input-group">
                     <label>Starting Balance ($)</label>
-                    <input type="number" id="goal-start" value="10000">
+                    <input type="number" id="goal-start" value="10000" oninput="saveState()">
                 </div>
                 <div class="input-group">
                     <label>Years to Grow</label>
-                    <input type="number" id="goal-years" value="20">
+                    <input type="number" id="goal-years" value="20" oninput="saveState()">
                 </div>
                 <div class="input-group">
                     <label>Annual Return (%)</label>
-                    <input type="number" id="goal-rate" value="7.0" step="0.1">
+                    <input type="number" id="goal-rate" value="7.0" step="0.1" oninput="saveState()">
                 </div>
             </div>
 
@@ -445,6 +534,14 @@
         <!-- INCOME SIMULATOR VIEW (NEW) -->
         <div id="income-view" class="view-section">
             <p style="color:#ccc; margin-bottom:20px; text-align:center;">Simulate retirement withdrawals (Trinity Study style).</p>
+
+            <div class="toggle-wrapper">
+                <label class="toggle-label">Simulate Market Volatility (+/- 2% Variance)</label>
+                <label class="switch">
+                    <input type="checkbox" id="income-volatility" onchange="calculateIncome()">
+                    <span class="slider"></span>
+                </label>
+            </div>
 
             <div class="input-grid">
                 <div class="input-group">
@@ -496,9 +593,84 @@
         // --- Core Logic ---
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadState(); // Load saved data
             calculateGrowth(); // Initial run
             calculateIncome(); // Initial run for income tab
         });
+
+        // --- State Management (Share & Save) ---
+
+        const inputIds = [
+            'balance', 'rate', 'contribution', 'frequency', 'years', 'inflation',
+            'target', 'goal-start', 'goal-years', 'goal-rate',
+            'income-balance', 'income-rate', 'income-growth', 'income-inflation', 'income-volatility'
+        ];
+
+        function saveState() {
+            const state = {};
+            inputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    state[id] = el.type === 'checkbox' ? el.checked : el.value;
+                }
+            });
+            localStorage.setItem('wealthPlannerState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            // Priority 1: URL Hash (Sharing)
+            const hash = window.location.hash.substring(1);
+            if (hash.startsWith('config=')) {
+                try {
+                    const json = atob(hash.split('=')[1]);
+                    const state = JSON.parse(json);
+                    applyState(state);
+                    // Clear hash after load to look clean
+                    history.replaceState(null, null, ' ');
+                    return;
+                } catch(e) { console.error('Invalid share link', e); }
+            }
+
+            // Priority 2: Local Storage (Auto-save)
+            const saved = localStorage.getItem('wealthPlannerState');
+            if (saved) {
+                try {
+                    applyState(JSON.parse(saved));
+                } catch(e) { console.error('Error loading saved state', e); }
+            }
+        }
+
+        function applyState(state) {
+            Object.keys(state).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.type === 'checkbox') el.checked = state[id];
+                    else el.value = state[id];
+                    
+                    // Update sync'd range slider if exists
+                    const range = document.getElementById(id + '-range');
+                    if (range) range.value = state[id];
+                }
+            });
+        }
+
+        function copyShareLink() {
+            saveState(); // Ensure current state is captured
+            const state = {};
+            inputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) state[id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+            
+            const b64 = btoa(JSON.stringify(state));
+            const url = window.location.origin + window.location.pathname + '#config=' + b64;
+            
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            });
+        }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -536,6 +708,8 @@
                 rangeEl.value = baseEl.value;
             }
             
+            saveState(); // Auto-save on change
+
             if (id.startsWith('income-')) {
                 calculateIncome();
             } else {
@@ -716,10 +890,10 @@
             const withdrawRate = (parseFloat(document.getElementById('income-rate').value) || 0) / 100;
             const growthRate = (parseFloat(document.getElementById('income-growth').value) || 0) / 100;
             const inflationRate = (parseFloat(document.getElementById('income-inflation').value) || 0) / 100;
+            const showVolatility = document.getElementById('income-volatility').checked;
 
             // Initial withdrawal amount
             let annualWithdrawal = balance * withdrawRate;
-            let currentBalance = balance;
             
             // Display Initial Income
             document.getElementById('income-annual').innerHTML = fmt(annualWithdrawal) + ' <span style="font-size:1.2rem">/ year</span>';
@@ -728,47 +902,97 @@
             // Simulation over 30 years
             const years = 30;
             const labels = [];
-            const balanceData = [];
+            const dataAvg = [];
+            const dataBull = [];
+            const dataBear = [];
             
+            // Initial states
+            let curAvg = balance;
+            let curBull = balance;
+            let curBear = balance;
+            let curWithdrawal = annualWithdrawal;
+
             for(let i=0; i<=years; i++) {
                 labels.push(`Year ${i}`);
-                balanceData.push(Math.max(0, currentBalance));
+                dataAvg.push(Math.max(0, curAvg));
+                if(showVolatility) {
+                    dataBull.push(Math.max(0, curBull));
+                    dataBear.push(Math.max(0, curBear));
+                }
 
-                if (i > 0) {
-                    // 1. Grow the portfolio
-                    currentBalance = currentBalance * (1 + growthRate);
-                    // 2. Subtract withdrawal (withdrawals occur at end of year for this simplified sim)
-                    // Or start of year? Standard convention varies. Let's do start of year logic approximation for chart.
-                    // Actually, simple Year End logic: Grow, then Withdraw.
-                    // However, withdrawal amount increases by inflation annually.
-                    currentBalance -= annualWithdrawal;
+                if (i < years) { // Calc next year
+                    // Avg
+                    if(curAvg > 0) {
+                        curAvg = curAvg * (1 + growthRate) - curWithdrawal;
+                    }
                     
-                    // Prepare next year's withdrawal adjusted for inflation
-                    annualWithdrawal = annualWithdrawal * (1 + inflationRate);
+                    // Volatility
+                    if(showVolatility) {
+                        if(curBull > 0) curBull = curBull * (1 + growthRate + 0.02) - curWithdrawal;
+                        if(curBear > 0) curBear = curBear * (1 + growthRate - 0.02) - curWithdrawal;
+                    }
+
+                    // Inflate withdrawal for next year
+                    curWithdrawal = curWithdrawal * (1 + inflationRate);
                 }
             }
 
-            updateIncomeChart(labels, balanceData);
+            updateIncomeChart(labels, dataAvg, showVolatility ? dataBull : null, showVolatility ? dataBear : null);
         }
 
-        function updateIncomeChart(labels, data) {
+        function updateIncomeChart(labels, dataAvg, dataBull, dataBear) {
             const ctx = document.getElementById('incomeChart').getContext('2d');
             
             if (incomeChartInstance) incomeChartInstance.destroy();
+
+            const datasets = [];
+
+            // Main (Average) Line
+            datasets.push({
+                label: 'Projected Balance (Avg)',
+                data: dataAvg,
+                borderColor: '#4a90e2',
+                backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                fill: !dataBull, // Fill if only one line
+                tension: 0.4,
+                pointRadius: 2,
+                order: 2
+            });
+
+            if(dataBull && dataBear) {
+                // Optimistic
+                datasets.push({
+                    label: 'Optimistic (+2%)',
+                    data: dataBull,
+                    borderColor: '#2ecc71', // Green
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    borderDash: [5,5],
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    order: 1
+                });
+
+                // Pessimistic
+                datasets.push({
+                    label: 'Pessimistic (-2%)',
+                    data: dataBear,
+                    borderColor: '#e74c3c', // Red
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderDash: [5,5],
+                    fill: '-1', // Fill to previous dataset (Optimistic? No, tricky with chartjs order)
+                    // Let's just fill bear to bottom or keep empty for cleanliness
+                    tension: 0.4,
+                    pointRadius: 0,
+                    order: 3
+                });
+            }
 
             incomeChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Portfolio Balance',
-                        data: data,
-                        borderColor: '#4a90e2',
-                        backgroundColor: 'rgba(74, 144, 226, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 2
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
@@ -778,8 +1002,8 @@
                         y: { ticks: { color: '#ccc', callback: val => '$' + compactNumber(val) }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 0 }
                     },
                     plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: c => 'Balance: ' + fmt(c.parsed.y) } }
+                        legend: { display: true, labels: {color: '#fff'} },
+                        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmt(c.parsed.y) } }
                     }
                 }
             });
