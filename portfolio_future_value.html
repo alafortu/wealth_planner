@@ -70,9 +70,9 @@
         /* Toast Notification */
         .toast {
             position: fixed;
-            top: 50%;
+            top: 30px; /* Position at the top */
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
+            transform: translateX(-50%) translateY(-100px); /* Start slightly above screen */
             background: #4a90e2;
             color: white;
             padding: 15px 30px;
@@ -80,12 +80,12 @@
             font-weight: 600;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2000;
             pointer-events: none;
             text-align: center;
         }
-        .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* Tabs */
         .tabs {
