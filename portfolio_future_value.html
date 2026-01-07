@@ -42,25 +42,30 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
-        /* Share Button */
-        .share-btn {
+        /* Action Buttons (Share, Save, Load) */
+        .action-buttons {
             position: absolute;
             top: 25px;
             right: 25px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .action-btn {
             background: rgba(255,255,255,0.15);
             border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            padding: 8px 15px;
+            padding: 8px 12px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.2s;
-            z-index: 10;
         }
-        .share-btn:hover { background: #4a90e2; border-color: #4a90e2; }
+        .action-btn:hover { background: #4a90e2; border-color: #4a90e2; }
         
         /* Toast Notification */
         .toast {
@@ -132,7 +137,7 @@
 
         @media (max-width: 700px) {
             .input-grid { grid-template-columns: 1fr; }
-            .share-btn { position: relative; top: 0; right: 0; margin-bottom: 15px; width: 100%; justify-content: center; }
+            .action-buttons { position: relative; top: 0; right: 0; margin-bottom: 15px; width: 100%; justify-content: center; }
         }
         
         .input-group {
@@ -395,12 +400,20 @@
     <div class="container">
         <h1>Wealth Planner</h1>
         
-        <button class="share-btn" onclick="copyShareLink()">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
-            Share / Save
-        </button>
+        <div class="action-buttons">
+            <button class="action-btn" onclick="copyShareLink()" title="Copy Link to Clipboard">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/><path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/></svg> Link
+            </button>
+            <button class="action-btn" onclick="exportConfig()" title="Save Configuration to File">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg> Save
+            </button>
+            <button class="action-btn" onclick="document.getElementById('file-input').click()" title="Load Configuration from File">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg> Load
+            </button>
+            <input type="file" id="file-input" style="display: none" accept=".json" onchange="importConfig(this)">
+        </div>
 
-        <div class="toast" id="toast">Configuration saved to Link!</div>
+        <div class="toast" id="toast">Action Successful!</div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('growth')">Growth Calculator</button>
@@ -654,6 +667,51 @@
             });
         }
 
+        // Export State to JSON File
+        function exportConfig() {
+            saveState(); // Update local storage first
+            const state = {};
+            inputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) state[id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "wealth_planner_config.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            showToast("Configuration saved to file!");
+        }
+
+        // Import State from JSON File
+        function importConfig(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    applyState(state);
+                    
+                    // Trigger calculations
+                    calculateGrowth();
+                    calculateIncome();
+                    if(document.getElementById('goal-view').classList.contains('active')) calculateGoal();
+
+                    showToast("Configuration loaded!");
+                } catch(err) {
+                    console.error(err);
+                    showToast("Error reading file");
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset input
+        }
+
         function copyShareLink() {
             saveState(); // Ensure current state is captured
             const state = {};
@@ -666,10 +724,15 @@
             const url = window.location.origin + window.location.pathname + '#config=' + b64;
             
             navigator.clipboard.writeText(url).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
+                showToast("Link copied to clipboard!");
             });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         function switchTab(tab) {
